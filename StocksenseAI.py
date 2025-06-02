@@ -65,7 +65,7 @@ st.markdown("""
         text-decoration: none;
     }
     .sidebar-footer a:hover {
-        text-decoration: underline;
+        text_decoration: underline;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -350,7 +350,7 @@ class StockAnalyzer:
                 'Retail_Holding': random.uniform(20, 50),
                 'QoQ_DII_Change': random.uniform(-5, 8),
                 'QoQ_FII_Change': random.uniform(-6, 7),
-                'YoY_DII_Change': random.uniform(-10, 15),
+                'YoY_FII_Change': random.uniform(-10, 15),
                 'YoY_FII_Change': random.uniform(-12, 18),
             }
 
@@ -906,3 +906,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
