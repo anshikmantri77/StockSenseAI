@@ -2,14 +2,16 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import yfinance as yf
+from nsepy import get_history # Import nsepy
+from datetime import datetime, timedelta
 import plotly.graph_objects as go
 import plotly.express as px
 from textblob import TextBlob
-from datetime import datetime, timedelta
 import warnings
 import random
 import pytz 
 
+# NLTK Downloads
 import nltk
 try:
     nltk.data.find('corpora/punkt')
@@ -112,18 +114,40 @@ class StockAnalyzer:
         self.all_stocks = sorted(list(set(self.large_cap_stocks + self.mid_cap_stocks + self.small_cap_stocks)))
     
     def get_stock_data(self, symbol, period='1y'):
+        """Fetch latest stock data using yfinance and nsepy. yfinance for info, nsepy for EOD history if needed."""
+        yf_symbol = symbol # yfinance uses .NS suffix
+        nsepy_symbol = symbol.replace('.NS', '') # nsepy does not use .NS suffix
+
+        hist = None
+        info = None
+        latest_data = None
+
+        # --- Try fetching historical data with nsepy ---
         try:
-            stock = yf.Ticker(symbol)
+            end_date = datetime.now(indian_timezone).date()
+            start_date = end_date - timedelta(days=365 * 1) # 1 year data
             
-            latest_data = stock.history(period='1d', interval='1m')
-            if latest_data.empty: 
-                 latest_data = stock.history(period='2d', interval='5m') 
-            if latest_data.empty: 
-                 latest_data = stock.history(period='2d', interval='15m')
-            
-            hist = stock.history(period=period)
-            info = stock.info
-            
+            nsepy_hist = get_history(symbol=nsepy_symbol, start=start_date, end=end_date)
+            if not nsepy_hist.empty:
+                hist = nsepy_hist.rename(columns={'Open': 'Open', 'High': 'High', 'Low': 'Low', 'Close': 'Close', 'Volume': 'Volume'})
+                hist.index.name = 'Date' # Set index name for Plotly
+        except Exception as e:
+            # print(f"Warning: nsepy failed for {nsepy_symbol}: {e}") # For debugging
+            pass # Continue to try yfinance if nsepy fails
+
+        # --- Always use yfinance for comprehensive info and fallback historical ---
+        try:
+            stock = yf.Ticker(yf_symbol)
+            info = stock.info # Get comprehensive info dictionary
+
+            # For most "real-time" price, yfinance intraday is the best free option
+            latest_data_yf = stock.history(period='1d', interval='1m')
+            if latest_data_yf.empty: 
+                latest_data_yf = stock.history(period='2d', interval='5m') 
+            if latest_data_yf.empty: 
+                latest_data_yf = stock.history(period='2d', interval='15m')
+            latest_data = latest_data_yf # Use yfinance's latest data
+
             if not latest_data.empty:
                 latest_price = latest_data['Close'].iloc[-1]
                 info['currentPrice'] = latest_price
@@ -136,15 +160,23 @@ class StockAnalyzer:
                     daily_change_pct = (daily_change / prev_close_info) * 100 if prev_close_info != 0 else 0
                     info['dailyChange'] = daily_change
                     info['dailyChangePercent'] = daily_change_pct
-                elif len(hist) > 1 : 
+                elif len(hist) > 1 : # Fallback to historical data's previous close if no specific prevClose info
                     prev_hist_close = hist['Close'].iloc[-2]
                     daily_change = latest_price - prev_hist_close
                     daily_change_pct = (daily_change / prev_hist_close) * 100 if prev_hist_close != 0 else 0
                     info['dailyChange'] = daily_change
                     info['dailyChangePercent'] = daily_change_pct
-            return hist, info, latest_data
+
+            # If nsepy_hist failed, use yfinance's historical data for charts
+            if hist is None or hist.empty:
+                hist = stock.history(period=period)
+                if not hist.empty:
+                    hist.index.name = 'Date' # Ensure index name is set for Plotly
         except Exception as e:
-            return None, None, None
+            # print(f"Error with yfinance for {yf_symbol}: {e}") # For debugging
+            return None, None, None # Return None if yfinance also fails
+
+        return hist, info, latest_data
     
     def get_advanced_financial_metrics(self, symbol, info):
         default_metrics_base = {
@@ -448,7 +480,7 @@ def main():
                 delta_display_string = f"{daily_change:+.2f} ({daily_change_pct:+.2f}%)"
                 delta_color = "normal" 
 
-            col1, col2, col3, col4 = st.columns(4)
+            col1, col2, col3, col4 = st.columns(4) # Define columns here
             
             with col1:
                 st.metric("Current Price", 
