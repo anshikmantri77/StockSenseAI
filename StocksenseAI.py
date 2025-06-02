@@ -6,31 +6,9 @@ import altair as alt
 from datetime import datetime, timedelta
 import plotly.graph_objects as go
 import plotly.express as px
-from textblob import TextBlob
 import warnings
 import random
 import pytz 
-
-import nltk
-try:
-    nltk.data.find('corpora/punkt')
-except nltk.downloader.DownloadError:
-    nltk.download('punkt')
-
-try:
-    nltk.data.find('corpora/averaged_perceptron_tagger')
-except nltk.downloader.DownloadError:
-    nltk.download('averaged_perceptron_tagger')
-
-try:
-    nltk.data.find('corpora/wordnet')
-except nltk.downloader.DownloadError:
-    nltk.download('wordnet')
-
-try:
-    nltk.data.find('corpora/brown')
-except nltk.downloader.DownloadError:
-    nltk.download('brown')
 
 warnings.filterwarnings('ignore')
 
@@ -45,14 +23,14 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-    .main-header {
-        font-size: 3rem;
-        font-weight: bold;
-        text-align: center;
-        background: linear-gradient(90deg, #1f77b4, #ff7f0e);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 2rem;
+    .main-header { 
+        font-size: 3rem; 
+        font-weight: bold; 
+        text-align: center; 
+        background: linear-gradient(90deg, #1f77b4, #ff7f0e); 
+        -webkit-background-clip: text; 
+        -webkit-text-fill-color: transparent; 
+        margin-bottom: 2rem; 
     }
     .metric-card {
         background: #f0f2f6;
@@ -278,7 +256,7 @@ class StockAnalyzer:
                     info['dailyChangePercent'] = daily_change_pct
 
         except Exception as e:
-            print(f"Error fetching data for {symbol}: {str(e)}") # Keep print for local debugging
+            print(f"Error fetching data for {symbol}: {str(e)}")
             return None, None, None
 
         return hist, info, latest_data
@@ -354,8 +332,8 @@ class StockAnalyzer:
                 'YoY_Revenue_Growth': random.uniform(-15, 40),
                 'QoQ_PAT_Growth': random.uniform(-25, 35),
                 'YoY_PAT_Growth': random.uniform(-20, 45),
-                'Operating_Cash_Flow': random.uniform(1e9, 50e9),
-                'Free_Cash_Flow': random.uniform(0.5e9, 30e9),
+                'Operating_Cash_Flow': random.uniform(1000000000, 50000000000),
+                'Free_Cash_Flow': random.uniform(500000000, 30000000000),
                 'DII_Holding': random.uniform(15, 45),
                 'FII_Holding': random.uniform(10, 35),
                 'Retail_Holding': random.uniform(20, 50),
@@ -556,15 +534,16 @@ class PortfolioBuilder:
         fig.update_traces(textposition='inside', textinfo='percent+label+value')
         return fig
 
-def get_sentiment_analysis(text):
-    try:
-        blob = TextBlob(text)
-        sentiment = blob.sentiment.polarity
-        if sentiment > 0.1: return "Positive", "🟢"
-        elif sentiment < -0.1: return "Negative", "🔴"
-        else: return "Neutral", "🟡"
-    except Exception as e:
-        return "Neutral", "🟡" 
+# Removed get_sentiment_analysis function as TextBlob (and NLTK) is removed
+# def get_sentiment_analysis(text):
+#     try:
+#         blob = TextBlob(text)
+#         sentiment = blob.sentiment.polarity
+#         if sentiment > 0.1: return "Positive", "🟢"
+#         elif sentiment < -0.1: return "Negative", "🔴"
+#         else: return "Neutral", "🟡"
+#     except Exception as e:
+#         return "Neutral", "🟡" 
 
 def main():
     st.markdown('<h1 class="main-header">📈 StockSense AI</h1>', unsafe_allow_html=True)
@@ -691,8 +670,14 @@ def main():
                 f"Concerns about sector headwinds impact {company_name_for_news} stock.",
                 f"{company_name_for_news} CEO optimistic about future expansion plans."
             ]
+            
+            sentiment_labels = ["Positive", "Negative", "Neutral"]
+            sentiment_icons = ["🟢", "🔴", "🟡"]
+            
             for item in random.sample(simulated_news_items, min(3, len(simulated_news_items))):
-                s_label, s_icon = get_sentiment_analysis(item)
+                random_sentiment_idx = random.randint(0, 2)
+                s_label = sentiment_labels[random_sentiment_idx]
+                s_icon = sentiment_icons[random_sentiment_idx]
                 st.markdown(f"{s_icon} **{s_label}**: {item}")
 
         else:
@@ -727,7 +712,6 @@ def main():
             st.dataframe(losers_df[['Symbol', 'Name', 'Price', 'Change_Pct']].style.format({'Price': '{:.2f}', 'Change_Pct': '{:.2f}%'}), hide_index=True)
         else: st.write("No loser data available.")
 
-    # Stock Picker Section
     st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
     st.header("🎯 Custom Stock Picker")
     st.markdown("Filter stocks based on your preferred financial metrics from **all available stocks**. Data is fetched live and may take a moment.")
@@ -739,8 +723,8 @@ def main():
             pe_max = st.number_input("Max P/E Ratio", value=50.0, min_value=0.0, step=1.0, format="%.1f", key="picker_pe_max")
             roe_min_pct = st.number_input("Min ROE (%)", value=10.0, min_value=0.0, step=1.0, format="%.1f", key="picker_roe_min")
         with c2:
-            mcap_min_cr = st.number_input("Min Market Cap (Cr INR)", value=0.0, min_value=0.0, step=100.0, format="%.0f", key="picker_mcap_min")
-            mcap_max_cr = st.number_input("Max Market Cap (Cr INR)", value=1000000.0, min_value=0.0, step=100.0, format="%.0f", key="picker_mcap_max")
+            mcap_min_cr = st.number_input("Min Market Cap (Cr INR)", value=0.0, min_value=0.0, max_value=10000000.0, step=100.0, format="%.0f", key="picker_mcap_min")
+            mcap_max_cr = st.number_input("Max Market Cap (Cr INR)", value=1000000.0, min_value=0.0, max_value=10000000.0, step=100.0, format="%.0f", key="picker_mcap_max")
             de_max = st.number_input("Max Debt-to-Equity Ratio", value=1.5, min_value=0.0, step=0.1, format="%.1f", key="picker_de_max")
         with c3:
             yoy_rev_growth_min_pct = st.number_input("Min YoY Revenue Growth (%)", value=5.0, min_value=-100.0, step=1.0, format="%.1f", key="picker_yoy_rev_min")
@@ -874,7 +858,6 @@ def main():
         """, 
         unsafe_allow_html=True
     )
-
 
 if __name__ == "__main__":
     main()
