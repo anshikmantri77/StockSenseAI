@@ -560,7 +560,7 @@ def main():
     clock_placeholder = st.sidebar.empty() 
     
     def update_clock():
-        current_time_kolkata = datetime.now(kolkata_tz).strftime("%H:%M:%S %p")
+        current_time_kolkata = datetime.now(kolkata_tz).strftime("%H:%M:%S %p %Z")
         clock_placeholder.markdown(f"<div class='live-clock'>{current_time_kolkata}</div>", unsafe_allow_html=True)
 
     update_clock() 
@@ -590,7 +590,7 @@ def main():
                 recommendation, css_class = analyzer.get_recommendation(score)
                 
                 st.subheader(f"📊 Analysis for {info.get('longName', selected_stock)}")
-                st.info(f"**Live Data** - Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S IST')}")
+                st.info(f"**Live Data** - Last Updated: {datetime.now(kolkata_tz).strftime('%Y-%m-%d %H:%M:%S %Z')}")
 
                 current_price = info.get('currentPrice', info.get('regularMarketPrice', 'N/A'))
                 daily_change = info.get('dailyChange', 0.0) 
@@ -787,7 +787,7 @@ def main():
                                 filtered_stocks_data.append({
                                     'Symbol': stock_symbol.replace('.NS', ''),
                                     'Name': s_info.get('shortName', stock_symbol),
-                                    'Price': s_info.get('currentPrice', 'N/A'),
+                                    'Price': f"{s_info.get('currentPrice', 'N/A'):.2f}" if isinstance(s_info.get('currentPrice'), (int, float)) else 'N/A',
                                     'P/E': f"{pe_val:.2f}" if pe_val != float('inf') else "N/A",
                                     'ROE (%)': f"{roe_val*100:.2f}",
                                     'Mkt Cap (Cr)': f"{mcap_val/1e7:.2f}",
@@ -848,7 +848,7 @@ def main():
                                     s_info = yf.Ticker(stock_sym).info
                                     s_name = s_info.get('shortName', stock_sym.replace(".NS",""))
                                     s_price = s_info.get('currentPrice', s_info.get('regularMarketPrice'))
-                                    price_display = f" (₹{s_price:.2f})" if s_price else ""
+                                    price_display = f" (₹{s_price:.2f})" if isinstance(s_price, (int, float)) else ""
                                     st.markdown(f"- {s_name}{price_display}")
                                     any_suggestions = True
                                 except:
