@@ -65,13 +65,13 @@ st.markdown("""
         text-decoration: none;
     }
     .sidebar-footer a:hover {
-        text_decoration: underline;
+        text-decoration: underline;
     }
 </style>
 """, unsafe_allow_html=True)
 
 class StockAnalyzer:
-    def _init_(self):
+    def __init__(self):
         # Extended stock lists with 50 stocks each
         self.large_cap_stocks = [
             'RELIANCE.NS', 'TCS.NS', 'HDFCBANK.NS', 'ICICIBANK.NS', 'HINDUNILVR.NS',
@@ -350,7 +350,7 @@ class StockAnalyzer:
                 'Retail_Holding': random.uniform(20, 50),
                 'QoQ_DII_Change': random.uniform(-5, 8),
                 'QoQ_FII_Change': random.uniform(-6, 7),
-                'YoY_FII_Change': random.uniform(-10, 15),
+                'YoY_DII_Change': random.uniform(-10, 15),
                 'YoY_FII_Change': random.uniform(-12, 18),
             }
 
@@ -535,7 +535,7 @@ class StockAnalyzer:
         return gainers, losers
 
 class PortfolioBuilder:
-    def _init_(self):
+    def __init__(self):
         self.risk_profiles = {
             'Conservative': {'large_cap': 70, 'mid_cap': 20, 'small_cap': 10},
             'Moderate': {'large_cap': 50, 'mid_cap': 30, 'small_cap': 20},
@@ -571,7 +571,7 @@ def get_sentiment_analysis(text):
 
 def main():
     st.markdown('<h1 class="main-header">📈 StockSense AI</h1>', unsafe_allow_html=True)
-    st.markdown("Advanced Real-time Stock Analysis & Portfolio Recommendation System")
+    st.markdown("*Advanced Real-time Stock Analysis & Portfolio Recommendation System*")
     
     analyzer = StockAnalyzer()
     portfolio_builder_instance = PortfolioBuilder() 
@@ -609,7 +609,7 @@ def main():
                 recommendation, css_class = analyzer.get_recommendation(score)
                 
                 st.subheader(f"📊 Analysis for {info.get('longName', selected_stock)}")
-                st.info(f"*Live Data* - Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S IST')}")
+                st.info(f"**Live Data** - Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S IST')}")
 
                 current_price = info.get('currentPrice', info.get('regularMarketPrice', 'N/A'))
                 daily_change = info.get('dailyChange', 0.0) 
@@ -654,7 +654,7 @@ def main():
                 st.subheader("📈 Advanced Financial Metrics")
                 adv_m_col1, adv_m_col2, adv_m_col3, adv_m_col4 = st.columns(4)
                 with adv_m_col1:
-                    st.markdown("*Growth Metrics*")
+                    st.markdown("**Growth Metrics**")
                     qrq_rev_g = metrics.get('QoQ_Revenue_Growth', 0)
                     yrq_rev_g = metrics.get('YoY_Revenue_Growth', 0)
                     qrq_pat_g = metrics.get('QoQ_PAT_Growth', 0)
@@ -665,7 +665,7 @@ def main():
                     st.markdown(f"QoQ PAT: { '🟢' if qrq_pat_g > 0 else '🔴'} {qrq_pat_g:.2f}%")
                     st.markdown(f"YoY PAT: { '🟢' if yrq_pat_g > 0 else '🔴'} {yrq_pat_g:.2f}%")
                 with adv_m_col2:
-                    st.markdown("*Cash Flow & Ratios*")
+                    st.markdown("**Cash Flow & Ratios**")
                     ocf_val = metrics.get('Operating_Cash_Flow', 0)
                     fcf_val = metrics.get('Free_Cash_Flow', 0)
                     st.markdown(f"Operating CF: ₹{ocf_val/10000000:.2f} Cr" if ocf_val else "N/A")
@@ -674,12 +674,12 @@ def main():
                     st.markdown(f"Current Ratio: {metrics.get('Current_Ratio',0):.2f}" if metrics.get('Current_Ratio') is not None else "N/A")
 
                 with adv_m_col3:
-                    st.markdown("*Institutional Holdings (%)*")
+                    st.markdown("**Institutional Holdings (%)**")
                     st.markdown(f"DII Holding: {metrics.get('DII_Holding', 0):.2f}%")
                     st.markdown(f"FII Holding: {metrics.get('FII_Holding', 0):.2f}%")
                     st.markdown(f"Retail Holding: {metrics.get('Retail_Holding', 0):.2f}%")
                 with adv_m_col4:
-                    st.markdown("*Holding Changes (QoQ %)*") 
+                    st.markdown("**Holding Changes (QoQ %)**") 
                     qoq_dii_c = metrics.get('QoQ_DII_Change', 0)
                     qoq_fii_c = metrics.get('QoQ_FII_Change', 0)
                     st.markdown(f"DII Change: {'🟢' if qoq_dii_c > 0 else '🔴'} {qoq_dii_c:.2f}%")
@@ -706,7 +706,7 @@ def main():
                 ]
                 for item in random.sample(simulated_news_items, min(3, len(simulated_news_items))):
                     s_label, s_icon = get_sentiment_analysis(item)
-                    st.markdown(f"{s_icon} *{s_label}*: {item}")
+                    st.markdown(f"{s_icon} **{s_label}**: {item}")
 
                 st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
                 st.header("📊 Live Market Overview")
@@ -742,7 +742,7 @@ def main():
 
     elif page == "Stock Picker":
         st.header("🎯 Custom Stock Picker")
-        st.markdown("Filter stocks based on your preferred financial metrics. Data is fetched live and may take a moment.")
+        st.markdown("Filter stocks based on your preferred financial metrics. _Data is fetched live and may take a moment._")
 
         with st.expander("Set Filtering Criteria", expanded=True):
             c1, c2, c3 = st.columns(3)
@@ -836,7 +836,7 @@ def main():
                     st.info("No stocks found matching your criteria. Try adjusting the filters.")
     
     elif page == "Portfolio Builder":
-        st.header("🛠 AI Portfolio Builder")
+        st.header("🛠️ AI Portfolio Builder")
         st.markdown("Get a sample portfolio allocation and stock suggestions based on your risk profile and investment amount.")
 
         risk_profile_choice = st.selectbox("Select your risk profile:", list(portfolio_builder_instance.risk_profiles.keys()), key="risk_profile_select")
@@ -851,7 +851,7 @@ def main():
             
             st.markdown("---")
             st.subheader("Example Stock Suggestions:")
-            st.markdown("These are randomly sampled examples from each category. *Always do your own research (DYOR)* before investing.")
+            st.markdown("_These are randomly sampled examples from each category. **Always do your own research (DYOR)** before investing._")
 
             sugg_cols = st.columns(3) 
             
@@ -865,7 +865,7 @@ def main():
             for cap_type, (stock_list, column) in cat_map.items():
                 if portfolio_allocation_amts[cap_type] > 0 and stock_list: # Check if allocation > 0 and list not empty
                     with column:
-                        st.markdown(f"{cap_type} (₹{portfolio_allocation_amts[cap_type]:,.0f})")
+                        st.markdown(f"**{cap_type} (₹{portfolio_allocation_amts[cap_type]:,.0f})**")
                         # Ensure num_suggestions does not exceed available stocks
                         actual_suggestions_count = min(num_suggestions, len(stock_list))
                         if actual_suggestions_count > 0:
@@ -881,7 +881,7 @@ def main():
                                 except:
                                     st.markdown(f"- {stock_sym.replace('.NS','')} (Info N/A)")
                         else:
-                             st.markdown(f"(No stocks to suggest in {cap_type} list)")       
+                             st.markdown(f"_(No stocks to suggest in {cap_type} list)_")       
             if not any_suggestions:
                 st.info("No stocks to suggest based on current lists or allocation.")
 
@@ -904,5 +904,5 @@ def main():
     )
 
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     main()
