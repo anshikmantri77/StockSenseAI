@@ -723,7 +723,7 @@ def main():
                 else:
                     st.warning("Could not fetch live market index data.")
 
-                st.subheader("🚀 Top Market Movers (Sampled)")
+                st.subheader("🚀 Top Market Movers ")
                 gainers_df, losers_df = analyzer.get_top_movers(analyzer.all_stocks, limit=5)
                 col_g, col_l = st.columns(2)
                 with col_g:
@@ -769,7 +769,7 @@ def main():
         if "Mid Cap" in stock_categories_to_scan: stocks_to_scan_list.extend(analyzer.mid_cap_stocks)
         if "Small Cap" in stock_categories_to_scan: stocks_to_scan_list.extend(analyzer.small_cap_stocks)
         
-        max_scan_limit = 50 # Limit the number of stocks to scan for performance reasons
+        max_scan_limit = 100 # Limit the number of stocks to scan for performance reasons
         if len(stocks_to_scan_list) > max_scan_limit:
             st.warning(f"Scanning is limited to {max_scan_limit} random stocks from your selection for performance.")
             stocks_to_scan_list = random.sample(stocks_to_scan_list, max_scan_limit)
