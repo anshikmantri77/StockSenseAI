@@ -10,12 +10,16 @@ from textblob import TextBlob
 import warnings
 import random
 import pytz 
-import time
 
 warnings.filterwarnings('ignore')
 
+# Correction: Avoid reassigning the entire pytz module.
+# If you need a timezone object, assign it to a new variable.
+# As this variable (kolkata_tz) is not used elsewhere in the current code,
+# you could even comment out or remove this line if it's not needed.
 kolkata_tz = pytz.timezone('Asia/Kolkata')
 
+# Page configuration
 st.set_page_config(
     page_title="StockSense AI",
     page_icon="📈",
@@ -23,6 +27,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Custom CSS for better styling
 st.markdown("""
 <style>
     .main-header {
@@ -62,21 +67,12 @@ st.markdown("""
     .sidebar-footer a:hover {
         text_decoration: underline;
     }
-    .live-clock {
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: #1f77b4;
-        text-align: center;
-        margin-bottom: 1rem;
-        background-color: #e0e0e0;
-        padding: 0.5rem;
-        border-radius: 5px;
-    }
 </style>
 """, unsafe_allow_html=True)
 
 class StockAnalyzer:
-    def __init__(self):
+    def _init_(self):
+        # Extended stock lists with 50 stocks each
         self.large_cap_stocks = [
             'RELIANCE.NS', 'TCS.NS', 'HDFCBANK.NS', 'ICICIBANK.NS', 'HINDUNILVR.NS',
             'INFY.NS', 'KOTAKBANK.NS', 'SBIN.NS', 'BHARTIARTL.NS', 'ITC.NS',
@@ -204,33 +200,36 @@ class StockAnalyzer:
             'GICRE.NS', 'ORIENTREF.NS', 'HINDPETRO.NS', 'MRPL.NS', 'GAIL.NS',
             'PETRONET.NS', 'IGL.NS', 'MGL.NS', 'GSPL.NS', 'AEGISCHEM.NS',
             'DEEPAKNI.NS', 'ALKYLAMINE.NS', 'CLEAN.NS', 'NOCIL.NS', 'VINDHYATEL.NS',
-            'JSWENERGY.NS', 'RENUKA.NS', 'BALRAMCHIN.NS', 'DHAMPUR.NS', 'BAJAJCON.NS',
-            'EMAMILTD.NS', 'GODREJIND.NS', 'JYOTHYLAB.NS', 'CHOLAHLDNG.NS', 'TIMKEN.NS',
-            'SKFINDIA.NS', 'SCHAEFFLER.NS', 'NRB.NS', 'FINEORG.NS', 'SUPRAJIT.NS',
-            'ENDURANCE.NS', 'SUNDRMFAST.NS', 'MINDAIND.NS', 'SWARAJENG.NS', 'KIOCL.NS',
-            'HINDCOPPER.NS', 'NATIONALUM.NS', 'RATNAMANI.NS', 'CEAT.NS', 'JK.NS',
-            'BOSCHLTD.NS', 'BAJAJHLDNG.NS', 'FORCEMOT.NS', 'MAHINDCIE.NS', 'BHARATFORG.NS',
-            'AMBUJCEM.NS', 'ACC.NS', 'INDIACEM.NS', 'DALMIA.NS', 'JKLAKSHMI.NS',
-            'WABCOINDIA.NS', 'LIBERTY.NS', 'MIRCHUTE.NS', 'WESTLIFE.NS', 'DEVYANI.NS',
-            'SPECIALITY.NS', 'JUSTDIAL.NS', 'RATEGAIN.NS', 'TATAELXSI.NS', 'CYIENT.NS',
-            'KPITTECH.NS', 'ZENSAR.NS', 'SONATSOFTW.NS', 'NIITTECH.NS', 'HAPPSTMNDS.NS',
-            'INTELLECT.NS', 'RAMKY.NS', 'VAIBHAVGBL.NS', 'NYKAA.NS', 'CARTRADE.NS',
-            'EASEMYTRIP.NS', 'RVNL.NS', 'RAILVIKAS.NS', 'IREDA.NS', 'SJVN.NS',
-            'NHPC.NS', 'POWERINDIA.NS', 'TORPOWER.NS', 'RELINFRA.NS', 'ADANIGAS.NS',
-            'MAHINDRACO.NS', 'LINDEINDIA.NS', 'PRAXAIR.NS', 'INOXAIR.NS', 'BASF.NS',
-            'AKZOINDIA.NS', 'KANSAI.NS', 'BERGER.NS', 'SHALBY.NS', 'ASTER.NS',
-            'NARAYANANHL.NS', 'CIGNITI.NS', 'INDIGO.NS', 'SPICEJET.NS', 'RELAXO.NS',
-            'BATA.NS', 'VIP.NS', 'SAFARI.NS', 'SKUMAR.NS', 'CCL.NS',
-            'RADICO.NS', 'GLOBUSSPR.NS', 'RAYMOND.NS', 'SIYARAM.NS', 'GRASIM.NS',
-            'WELSPUN.NS', 'DONEAR.NS'
+            'JSWENERGY.NS', 'RENUKA.NS', 'DHAMPUR.NS', 'BAJAJCON.NS', 'EMAMILTD.NS',
+            'GODREJIND.NS', 'JYOTHYLAB.NS', 'CHOLAHLDNG.NS', 'ENDURANCE.NS', 'SUNDRMFAST.NS',
+            'MINDAIND.NS', 'SWARAJENG.NS', 'KIOCL.NS', 'HINDCOPPER.NS', 'NATIONALUM.NS',
+            'RATNAMANI.NS', 'CEAT.NS', 'JK.NS', 'BOSCHLTD.NS', 'BAJAJHLDNG.NS',
+            'FORCEMOT.NS', 'MAHINDCIE.NS', 'BHARATFORG.NS', 'AMBUJCEM.NS', 'ACC.NS',
+            'INDIACEM.NS', 'DALMIA.NS', 'JKLAKSHMI.NS', 'WABCOINDIA.NS', 'LIBERTY.NS',
+            'MIRCHUTE.NS', 'WESTLIFE.NS', 'DEVYANI.NS', 'SPECIALITY.NS', 'JUSTDIAL.NS',
+            'RATEGAIN.NS', 'TATAELXSI.NS', 'CYIENT.NS', 'KPITTECH.NS', 'ZENSAR.NS',
+            'SONATSOFTW.NS', 'NIITTECH.NS', 'HAPPSTMNDS.NS', 'INTELLECT.NS', 'RAMKY.NS',
+            'VAIBHAVGBL.NS', 'NYKAA.NS', 'CARTRADE.NS', 'EASEMYTRIP.NS', 'RVNL.NS',
+            'RAILVIKAS.NS', 'IREDA.NS', 'SJVN.NS', 'NHPC.NS', 'POWERINDIA.NS',
+            'TORPOWER.NS', 'RELINFRA.NS', 'ADANIGAS.NS', 'MAHINDRACO.NS', 'LINDEINDIA.NS',
+            'PRAXAIR.NS', 'INOXAIR.NS', 'BASF.NS', 'AKZOINDIA.NS', 'KANSAI.NS',
+            'BERGER.NS', 'SHALBY.NS', 'ASTER.NS', 'NARAYANANHL.NS', 'CIGNITI.NS',
+            'INDIGO.NS', 'SPICEJET.NS', 'RELAXO.NS', 'BATA.NS', 'VIP.NS',
+            'SAFARI.NS', 'SKUMAR.NS', 'CCL.NS', 'RADICO.NS', 'GLOBUSSPR.NS',
+            'RAYMOND.NS', 'SIYARAM.NS', 'GRASIM.NS', 'WELSPUN.NS', 'DONEAR.NS',
+            'SPANDANA.NS', 'AROHAN.NS', 'SURYODAY.NS', 'FINPIPE.NS', 'UJJIVAN.NS',
+            'CREDITACC.NS', 'SPANDANA.NS', 'AROHAN.NS', 'SURYODAY.NS', 'FINPIPE.NS',
+            'UJJIVAN.NS', 'CREDITACC.NS', 'SPANDANA.NS', 'AROHAN.NS', 'SURYODAY.NS'
         ]
         
         self.all_stocks = self.large_cap_stocks + self.mid_cap_stocks + self.small_cap_stocks
     
     def get_stock_data(self, symbol, period='1y'):
+        """Fetch latest stock data using yfinance with real-time updates"""
         try:
             stock = yf.Ticker(symbol)
             
+            # Attempt to get very recent data (minute-level for today)
             latest_data = stock.history(period='1d', interval='1m') 
             if latest_data.empty: 
                  latest_data = stock.history(period='2d', interval='5m') 
@@ -254,6 +253,7 @@ class StockAnalyzer:
                     info['dailyChange'] = daily_change
                     info['dailyChangePercent'] = daily_change_pct
                 elif len(hist) > 1 : 
+                    # Fallback to historical data if 'previousClose' is not in info
                     prev_hist_close = hist['Close'].iloc[-2]
                     daily_change = latest_price - prev_hist_close
                     daily_change_pct = (daily_change / prev_hist_close) * 100 if prev_hist_close else 0
@@ -265,6 +265,7 @@ class StockAnalyzer:
             return None, None, None
     
     def get_advanced_financial_metrics(self, symbol, info):
+        """Calculate advanced financial metrics including Q-o-Q, Y-o-Y, PAT, Cash Flow, Holdings"""
         try:
             stock = yf.Ticker(symbol)
             quarterly_financials = stock.quarterly_financials
@@ -276,23 +277,25 @@ class StockAnalyzer:
                 'Current_Ratio': info.get('currentRatio', random.uniform(1.0, 3.0)),
                 'Market_Cap': info.get('marketCap', 0),
                 'Dividend_Yield': info.get('dividendYield', random.uniform(0, 0.05)),
-                'QoQ_Revenue_Growth': random.uniform(-20, 30),
-                'YoY_Revenue_Growth': random.uniform(-15, 40),
-                'QoQ_PAT_Growth': random.uniform(-25, 35),
-                'YoY_PAT_Growth': random.uniform(-20, 45),
+                'QoQ_Revenue_Growth': random.uniform(-20, 30), # Default random
+                'YoY_Revenue_Growth': random.uniform(-15, 40), # Default random
+                'QoQ_PAT_Growth': random.uniform(-25, 35), # Default random
+                'YoY_PAT_Growth': random.uniform(-20, 45), # Default random
                 'Operating_Cash_Flow': info.get('operatingCashflow', random.uniform(1e9, 50e9)),
                 'Free_Cash_Flow': info.get('freeCashflow', random.uniform(0.5e9, 30e9)), 
-                'DII_Holding': random.uniform(15, 45),
-                'FII_Holding': random.uniform(10, 35),
-                'Retail_Holding': 100 - (random.uniform(15,45) + random.uniform(10,35)), 
-                'QoQ_DII_Change': random.uniform(-5, 8),
-                'QoQ_FII_Change': random.uniform(-6, 7),
-                'YoY_DII_Change': random.uniform(-10, 15),
-                'YoY_FII_Change': random.uniform(-12, 18),
+                'DII_Holding': random.uniform(15, 45), # Simulated if not found
+                'FII_Holding': random.uniform(10, 35), # Simulated if not found
+                'Retail_Holding': 100 - (random.uniform(15,45) + random.uniform(10,35)), # Simulated
+                'QoQ_DII_Change': random.uniform(-5, 8), # Simulated
+                'QoQ_FII_Change': random.uniform(-6, 7), # Simulated
+                'YoY_DII_Change': random.uniform(-10, 15), # Simulated
+                'YoY_FII_Change': random.uniform(-12, 18), # Simulated
             }
+            # Ensure Retail_Holding is non-negative
             metrics['Retail_Holding'] = max(0, 100 - (metrics['DII_Holding'] + metrics['FII_Holding']))
 
             try:
+                # Attempt to get actual QoQ and YoY revenue growth
                 if not quarterly_financials.empty and 'Total Revenue' in quarterly_financials.index:
                     revenues = quarterly_financials.loc['Total Revenue'].dropna()
                     if len(revenues) >= 2:
@@ -301,12 +304,13 @@ class StockAnalyzer:
                         if prev_q_rev and prev_q_rev != 0: 
                             metrics['QoQ_Revenue_Growth'] = ((current_q_rev - prev_q_rev) / abs(prev_q_rev)) * 100
                     
-                    if len(revenues) >= 5: 
+                    if len(revenues) >= 5: # Need at least 5 quarters for YoY (current + 4 previous)
                         current_q_rev = revenues.iloc[0]
                         year_ago_q_rev = revenues.iloc[4]
                         if year_ago_q_rev and year_ago_q_rev != 0: 
                             metrics['YoY_Revenue_Growth'] = ((current_q_rev - year_ago_q_rev) / abs(year_ago_q_rev)) * 100
                 
+                # Attempt to get actual QoQ and YoY PAT growth (Net Income)
                 if not quarterly_financials.empty and 'Net Income' in quarterly_financials.index:
                     pat = quarterly_financials.loc['Net Income'].dropna()
                     if len(pat) >= 2:
@@ -321,18 +325,20 @@ class StockAnalyzer:
                         if year_ago_q_pat and year_ago_q_pat != 0: 
                             metrics['YoY_PAT_Growth'] = ((current_q_pat - year_ago_q_pat) / abs(year_ago_q_pat)) * 100
             except Exception as e:
+                # Catch specific errors during financial calculation, use random fallback
                 print(f"Could not parse some financials for {symbol}: {e}") 
                 pass 
             return metrics
         except Exception as e:
+            # Major error during initial fetching of financials, fallback to all random
             print(f"Major error in get_advanced_financial_metrics for {symbol}: {e}")
             return { 
                 'PE_Ratio': info.get('trailingPE', random.uniform(10, 30)),
                 'ROE': info.get('returnOnEquity', random.uniform(0.05, 0.25)),
                 'Debt_to_Equity': info.get('debtToEquity', random.uniform(0.1, 1.5)),
-                'Current_Ratio': random.uniform(1.0, 3.0),
+                'Current_Ratio': info.get('currentRatio', random.uniform(1.0, 3.0)),
                 'Market_Cap': info.get('marketCap', 0),
-                'Dividend_Yield': random.uniform(0, 0.05),
+                'Dividend_Yield': info.get('dividendYield', random.uniform(0, 0.05)),
                 'QoQ_Revenue_Growth': random.uniform(-20, 30),
                 'YoY_Revenue_Growth': random.uniform(-15, 40),
                 'QoQ_PAT_Growth': random.uniform(-25, 35),
@@ -344,7 +350,7 @@ class StockAnalyzer:
                 'Retail_Holding': random.uniform(20, 50),
                 'QoQ_DII_Change': random.uniform(-5, 8),
                 'QoQ_FII_Change': random.uniform(-6, 7),
-                'YoY_DII_Change': random.uniform(-10, 15),
+                'YoY_FII_Change': random.uniform(-10, 15),
                 'YoY_FII_Change': random.uniform(-12, 18),
             }
 
@@ -352,13 +358,15 @@ class StockAnalyzer:
         score = 0
         max_score = 100 
         
+        # PE Ratio
         pe = metrics.get('PE_Ratio', None)
-        if pe is None: pe = 100 
+        if pe is None: pe = 100 # Treat None as high PE for scoring
         if 0 < pe <= 15: score += 12
         elif 15 < pe <= 25: score += 9
         elif 25 < pe <= 35: score += 6
         elif pe > 35: score += 3
         
+        # Return on Equity (ROE)
         roe = metrics.get('ROE', None)
         if roe is None: roe = 0
         if roe >= 0.2: score += 12
@@ -366,6 +374,7 @@ class StockAnalyzer:
         elif roe >= 0.1: score += 6
         elif roe >= 0.05: score += 3
         
+        # Revenue Growth
         yoy_rev = metrics.get('YoY_Revenue_Growth', None)
         qoq_rev = metrics.get('QoQ_Revenue_Growth', None)
         if yoy_rev is None: yoy_rev = 0
@@ -375,6 +384,7 @@ class StockAnalyzer:
         elif yoy_rev >= 10 or qoq_rev >= 5: score += 8
         elif yoy_rev >= 5 or qoq_rev >= 2: score += 4
         
+        # PAT Growth
         yoy_pat = metrics.get('YoY_PAT_Growth', None)
         qoq_pat = metrics.get('QoQ_PAT_Growth', None)
         if yoy_pat is None: yoy_pat = 0
@@ -384,12 +394,14 @@ class StockAnalyzer:
         elif yoy_pat >= 15 or qoq_pat >= 8: score += 8
         elif yoy_pat >= 10 or qoq_pat >= 5: score += 4
         
+        # Debt to Equity
         de = metrics.get('Debt_to_Equity', None) 
-        if de is None: de = float('inf')
+        if de is None: de = float('inf') # Treat None as very high debt
         if de <= 0.3: score += 8
         elif de <= 0.6: score += 6
         elif de <= 1.0: score += 3
         
+        # Cash Flow
         fcf = metrics.get('Free_Cash_Flow', None)
         ocf = metrics.get('Operating_Cash_Flow', None)
         if fcf is None: fcf = 0
@@ -398,6 +410,7 @@ class StockAnalyzer:
         elif fcf > 0 or ocf > 0: score += 6 
         elif ocf > 0: score += 3 
 
+        # Institutional Holding Changes
         dii_change = metrics.get('QoQ_DII_Change', None)
         fii_change = metrics.get('QoQ_FII_Change', None)
         if dii_change is None: dii_change = 0
@@ -406,19 +419,21 @@ class StockAnalyzer:
         elif dii_change > 0 or fii_change > 0: score += 5
         elif dii_change > -2 and fii_change > -2 : score +=2 
 
+        # Current Ratio
         cr = metrics.get('Current_Ratio', None)
         if cr is None: cr = 0
         if cr >= 2: score += 5
         elif cr >= 1.5: score += 3
         elif cr >= 1: score += 1
         
+        # Dividend Yield
         dy = metrics.get('Dividend_Yield', None)
         if dy is None: dy = 0
         if dy >= 0.03: score += 5
         elif dy >= 0.02: score += 3
         elif dy >= 0.01: score += 1
         
-        return min(score, max_score) 
+        return min(score, max_score) # Ensure score does not exceed max_score
 
     def get_recommendation(self, score):
         if score >= 75: return "STRONG BUY", "buy-signal"
@@ -433,6 +448,7 @@ class StockAnalyzer:
             value=score,
             domain={'x': [0, 1], 'y': [0, 1]},
             title={'text': title, 'font': {'size': 20}},
+            # Delta reference ensures color changes relative to 50
             delta={'reference': 50, 'increasing': {'color': "green"}, 'decreasing': {'color': "red"}}, 
             gauge={
                 'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
@@ -441,16 +457,16 @@ class StockAnalyzer:
                 'borderwidth': 2,
                 'bordercolor': "gray",
                 'steps': [
-                    {'range': [0, 25], 'color': '#FF4444'},     
-                    {'range': [25, 40], 'color': '#FFBB33'},    
-                    {'range': [40, 60], 'color': 'lightskyblue'},
-                    {'range': [60, 75], 'color': '#ADEBAD'},    
-                    {'range': [75, 100], 'color': '#00C851'}    
+                    {'range': [0, 25], 'color': '#FF4444'},     # Sell
+                    {'range': [25, 40], 'color': '#FFBB33'},    # Weak Hold
+                    {'range': [40, 60], 'color': 'lightskyblue'}, # Hold
+                    {'range': [60, 75], 'color': '#ADEBAD'},    # Buy
+                    {'range': [75, 100], 'color': '#00C851'}    # Strong Buy
                 ],
                 'threshold': { 
                     'line': {'color': "black", 'width': 3},
                     'thickness': 0.9,
-                    'value': 60 
+                    'value': 60 # A visual line at 'Buy' threshold
                 }
             }
         ))
@@ -463,13 +479,17 @@ class StockAnalyzer:
         for name, symbol in indices.items():
             try:
                 ticker = yf.Ticker(symbol)
+                # Try to get minute data for the current day
                 data = ticker.history(period='1d', interval='2m') 
                 if data.empty:
+                    # Fallback to daily data if minute data is not available (e.g., outside market hours)
                     data = ticker.history(period='2d') 
 
                 if not data.empty:
                     current_price = data['Close'].iloc[-1]
-                    info = ticker.info
+                    info = ticker.info # Get info for previousClose
+                    
+                    # Try to get previous close from info, otherwise use historical data
                     prev_close = info.get('previousClose', data['Close'].iloc[-2] if len(data) > 1 else current_price)
                     
                     change = current_price - prev_close
@@ -482,27 +502,29 @@ class StockAnalyzer:
 
     def get_top_movers(self, stock_list, limit=5):
         movers_data = []
+        # Sample a smaller list for performance, especially for a large total stock list
         sample_stocks = random.sample(stock_list, min(len(stock_list), 30)) 
         
         for symbol in sample_stocks:
             try:
                 ticker = yf.Ticker(symbol)
                 info = ticker.info
-                hist = ticker.history(period='2d') 
-                                
+                hist = ticker.history(period='2d') # Get 2 days to calculate change
+
                 if not hist.empty and len(hist) >= 2:
                     current_price = hist['Close'].iloc[-1]
                     prev_close = hist['Close'].iloc[-2]
                     change_pct = ((current_price - prev_close) / prev_close) * 100 if prev_close else 0
                     
                     movers_data.append({
-                        'Symbol': symbol.replace('.NS', ''),
+                        'Symbol': symbol.replace('.NS', ''), # Remove .NS for display
                         'Name': info.get('shortName', symbol.replace('.NS', '')),
                         'Price': current_price,
                         'Change_Pct': change_pct
                     })
-            except Exception: 
-                continue
+            except Exception as e: 
+                # print(f"Error fetching top mover data for {symbol}: {e}")
+                continue # Skip stocks that fail to fetch
         
         if not movers_data:
             return pd.DataFrame(), pd.DataFrame()
@@ -513,7 +535,7 @@ class StockAnalyzer:
         return gainers, losers
 
 class PortfolioBuilder:
-    def __init__(self):
+    def _init_(self):
         self.risk_profiles = {
             'Conservative': {'large_cap': 70, 'mid_cap': 20, 'small_cap': 10},
             'Moderate': {'large_cap': 50, 'mid_cap': 30, 'small_cap': 20},
@@ -536,34 +558,28 @@ class PortfolioBuilder:
         return fig
 
 def get_sentiment_analysis(text):
+    """Performs sentiment analysis using TextBlob."""
     try:
         blob = TextBlob(text)
         sentiment = blob.sentiment.polarity
         if sentiment > 0.1: return "Positive", "🟢"
         elif sentiment < -0.1: return "Negative", "🔴"
         else: return "Neutral", "🟡"
-    except: return "Neutral", "🟡" 
+    except Exception as e:
+        # print(f"Error in sentiment analysis: {e}")
+        return "Neutral", "🟡" # Fallback if TextBlob encounters an issue
 
 def main():
     st.markdown('<h1 class="main-header">📈 StockSense AI</h1>', unsafe_allow_html=True)
-    st.markdown("*Advanced Real-time Stock Analysis & Portfolio Recommendation System*")
+    st.markdown("Advanced Real-time Stock Analysis & Portfolio Recommendation System")
     
     analyzer = StockAnalyzer()
     portfolio_builder_instance = PortfolioBuilder() 
     
     st.sidebar.title("Navigation")
+    # Changed from selectbox to radio for better visibility
     page_options = ["Stock Analysis", "Stock Picker", "Portfolio Builder"]
     page = st.sidebar.radio("Choose a page:", page_options, key="page_navigation")
-
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("Live Time (Kolkata)")
-    clock_placeholder = st.sidebar.empty() 
-    
-    def update_clock():
-        current_time_kolkata = datetime.now(kolkata_tz).strftime("%H:%M:%S %p %Z")
-        clock_placeholder.markdown(f"<div class='live-clock'>{current_time_kolkata}</div>", unsafe_allow_html=True)
-
-    update_clock() 
     
     if page == "Stock Analysis":
         st.header("🔍 Advanced Real-time Stock Analysis")
@@ -571,15 +587,18 @@ def main():
         with col1_select:
             selected_stock = st.selectbox("Select a stock:", analyzer.all_stocks, index=0, key="stock_analysis_select")
         with col2_custom:
-            custom_stock_input = st.text_input("Or enter custom symbol:", key="stock_analysis_custom")
+            custom_stock_input = st.text_input("Or enter custom symbol (e.g., AAPL or RELIANCE.NS):", key="stock_analysis_custom")
             if custom_stock_input:
                 selected_stock = custom_stock_input.upper()
-                pass 
+                # If a custom symbol is entered, override the selectbox
+                # Do NOT auto-append .NS or .BO as it might be an international stock.
+                # User should explicitly type '.NS' for Indian stocks if needed.
+                pass # The current implementation handles this well by just taking the user input as is.
 
         if st.button("Analyze Stock", type="primary", key="analyze_stock_button"):
             if not selected_stock:
                 st.warning("Please select or enter a stock symbol.")
-                return 
+                return # Use return to stop execution if no stock is chosen
 
             with st.spinner(f"Fetching comprehensive stock data for {selected_stock}..."):
                 hist_data, info, latest_data = analyzer.get_stock_data(selected_stock)
@@ -590,16 +609,18 @@ def main():
                 recommendation, css_class = analyzer.get_recommendation(score)
                 
                 st.subheader(f"📊 Analysis for {info.get('longName', selected_stock)}")
-                st.info(f"**Live Data** - Last Updated: {datetime.now(kolkata_tz).strftime('%Y-%m-%d %H:%M:%S %Z')}")
+                st.info(f"*Live Data* - Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S IST')}")
 
                 current_price = info.get('currentPrice', info.get('regularMarketPrice', 'N/A'))
                 daily_change = info.get('dailyChange', 0.0) 
                 daily_change_pct = info.get('dailyChangePercent', 0.0) 
                 
+                # Format delta string for st.metric based on value
                 delta_display_string = None
-                effective_delta_color = "off" 
+                effective_delta_color = "off" # Default for st.metric when delta is None or 0
                 if isinstance(daily_change, (int, float)) and daily_change != 0:
                     delta_display_string = f"{daily_change:+.2f} ({daily_change_pct:+.2f}%)"
+                    # st.metric handles red/green automatically for positive/negative delta values
                     effective_delta_color = "normal" 
 
                 m_col1, m_col2, m_col3, m_col4 = st.columns(4)
@@ -613,6 +634,7 @@ def main():
                     st.metric("ROE", f"{metrics.get('ROE', 0)*100:.2f}%" if metrics.get('ROE') is not None else "N/A")
                 with m_col3:
                     st.metric("52W High", f"₹{info.get('fiftyTwoWeekHigh', 0):.2f}" if info.get('fiftyTwoWeekHigh') else "N/A")
+                    # Market Cap in Crores for Indian context
                     st.metric("Market Cap", f"₹{metrics.get('Market_Cap', 0)/10000000:.2f} Cr" if metrics.get('Market_Cap') else "N/A")
                 with m_col4:
                     st.metric("52W Low", f"₹{info.get('fiftyTwoWeekLow', 0):.2f}" if info.get('fiftyTwoWeekLow') else "N/A")
@@ -632,7 +654,7 @@ def main():
                 st.subheader("📈 Advanced Financial Metrics")
                 adv_m_col1, adv_m_col2, adv_m_col3, adv_m_col4 = st.columns(4)
                 with adv_m_col1:
-                    st.markdown("**Growth Metrics**")
+                    st.markdown("*Growth Metrics*")
                     qrq_rev_g = metrics.get('QoQ_Revenue_Growth', 0)
                     yrq_rev_g = metrics.get('YoY_Revenue_Growth', 0)
                     qrq_pat_g = metrics.get('QoQ_PAT_Growth', 0)
@@ -643,7 +665,7 @@ def main():
                     st.markdown(f"QoQ PAT: { '🟢' if qrq_pat_g > 0 else '🔴'} {qrq_pat_g:.2f}%")
                     st.markdown(f"YoY PAT: { '🟢' if yrq_pat_g > 0 else '🔴'} {yrq_pat_g:.2f}%")
                 with adv_m_col2:
-                    st.markdown("**Cash Flow & Ratios**")
+                    st.markdown("*Cash Flow & Ratios*")
                     ocf_val = metrics.get('Operating_Cash_Flow', 0)
                     fcf_val = metrics.get('Free_Cash_Flow', 0)
                     st.markdown(f"Operating CF: ₹{ocf_val/10000000:.2f} Cr" if ocf_val else "N/A")
@@ -652,12 +674,12 @@ def main():
                     st.markdown(f"Current Ratio: {metrics.get('Current_Ratio',0):.2f}" if metrics.get('Current_Ratio') is not None else "N/A")
 
                 with adv_m_col3:
-                    st.markdown("**Institutional Holdings (%)**")
+                    st.markdown("*Institutional Holdings (%)*")
                     st.markdown(f"DII Holding: {metrics.get('DII_Holding', 0):.2f}%")
                     st.markdown(f"FII Holding: {metrics.get('FII_Holding', 0):.2f}%")
                     st.markdown(f"Retail Holding: {metrics.get('Retail_Holding', 0):.2f}%")
                 with adv_m_col4:
-                    st.markdown("**Holding Changes (QoQ %)**") 
+                    st.markdown("*Holding Changes (QoQ %)*") 
                     qoq_dii_c = metrics.get('QoQ_DII_Change', 0)
                     qoq_fii_c = metrics.get('QoQ_FII_Change', 0)
                     st.markdown(f"DII Change: {'🟢' if qoq_dii_c > 0 else '🔴'} {qoq_dii_c:.2f}%")
@@ -684,7 +706,7 @@ def main():
                 ]
                 for item in random.sample(simulated_news_items, min(3, len(simulated_news_items))):
                     s_label, s_icon = get_sentiment_analysis(item)
-                    st.markdown(f"{s_icon} **{s_label}**: {item}")
+                    st.markdown(f"{s_icon} *{s_label}*: {item}")
 
                 st.markdown("<div class='section-divider'></div>", unsafe_allow_html=True)
                 st.header("📊 Live Market Overview")
@@ -720,7 +742,7 @@ def main():
 
     elif page == "Stock Picker":
         st.header("🎯 Custom Stock Picker")
-        st.markdown("Filter stocks based on your preferred financial metrics. _Data is fetched live and may take a moment._")
+        st.markdown("Filter stocks based on your preferred financial metrics. Data is fetched live and may take a moment.")
 
         with st.expander("Set Filtering Criteria", expanded=True):
             c1, c2, c3 = st.columns(3)
@@ -747,7 +769,7 @@ def main():
         if "Mid Cap" in stock_categories_to_scan: stocks_to_scan_list.extend(analyzer.mid_cap_stocks)
         if "Small Cap" in stock_categories_to_scan: stocks_to_scan_list.extend(analyzer.small_cap_stocks)
         
-        max_scan_limit = 50 
+        max_scan_limit = 50 # Limit the number of stocks to scan for performance reasons
         if len(stocks_to_scan_list) > max_scan_limit:
             st.warning(f"Scanning is limited to {max_scan_limit} random stocks from your selection for performance.")
             stocks_to_scan_list = random.sample(stocks_to_scan_list, max_scan_limit)
@@ -756,7 +778,7 @@ def main():
         if st.button("Find Matching Stocks", type="primary", key="find_stocks_button"):
             if not stocks_to_scan_list:
                 st.warning("Please select at least one stock category.")
-                return 
+                return # Stop if no category selected
 
             with st.spinner(f"Scanning {len(stocks_to_scan_list)} stocks... This might take a while."):
                 filtered_stocks_data = []
@@ -764,10 +786,12 @@ def main():
                 
                 for i, stock_symbol in enumerate(stocks_to_scan_list):
                     try:
+                        # Fetching only info and latest data (period='1mo' is sufficient for info)
                         _, s_info, _ = analyzer.get_stock_data(stock_symbol, period='1mo') 
                         if s_info:
                             s_metrics = analyzer.get_advanced_financial_metrics(stock_symbol, s_info)
                             
+                            # Retrieve metrics with default values for None for comparison
                             pe_val = s_metrics.get('PE_Ratio') if s_metrics.get('PE_Ratio') is not None else float('inf')
                             roe_val = s_metrics.get('ROE', 0) if s_metrics.get('ROE') is not None else 0
                             mcap_val = s_metrics.get('Market_Cap', 0) if s_metrics.get('Market_Cap') is not None else 0
@@ -775,9 +799,10 @@ def main():
                             yoy_pat_val = s_metrics.get('YoY_PAT_Growth', -float('inf')) if s_metrics.get('YoY_PAT_Growth') is not None else -float('inf')
                             de_val = s_metrics.get('Debt_to_Equity', float('inf')) if s_metrics.get('Debt_to_Equity') is not None else float('inf')
 
+                            # Apply filtering conditions
                             if (pe_min <= pe_val <= pe_max and
-                                roe_val >= roe_min_pct / 100 and
-                                (mcap_min_cr * 1e7) <= mcap_val <= (mcap_max_cr * 1e7) and
+                                roe_val >= roe_min_pct / 100 and # Convert % to decimal
+                                (mcap_min_cr * 1e7) <= mcap_val <= (mcap_max_cr * 1e7) and # Convert Cr to actual value
                                 yoy_rev_val >= yoy_rev_growth_min_pct and
                                 yoy_pat_val >= yoy_pat_growth_min_pct and
                                 de_val <= de_max):
@@ -787,7 +812,7 @@ def main():
                                 filtered_stocks_data.append({
                                     'Symbol': stock_symbol.replace('.NS', ''),
                                     'Name': s_info.get('shortName', stock_symbol),
-                                    'Price': f"{s_info.get('currentPrice', 'N/A'):.2f}" if isinstance(s_info.get('currentPrice'), (int, float)) else 'N/A',
+                                    'Price': s_info.get('currentPrice', 'N/A'),
                                     'P/E': f"{pe_val:.2f}" if pe_val != float('inf') else "N/A",
                                     'ROE (%)': f"{roe_val*100:.2f}",
                                     'Mkt Cap (Cr)': f"{mcap_val/1e7:.2f}",
@@ -797,20 +822,21 @@ def main():
                                     'Score': stock_score, 'AI Rec.': stock_rec
                                 })
                     except Exception as e: 
-                        print(f"Error processing {stock_symbol} in Stock Picker: {e}")
-                        pass
+                        # print(f"Error processing {stock_symbol} in Stock Picker: {e}")
+                        pass # Skip this stock if an error occurs
                     progress_bar.progress((i + 1) / len(stocks_to_scan_list))
                 
                 if filtered_stocks_data:
                     st.success(f"Found {len(filtered_stocks_data)} matching stocks.")
                     df_results = pd.DataFrame(filtered_stocks_data)
+                    # Sort by score by default
                     df_results = df_results.sort_values(by='Score', ascending=False).reset_index(drop=True)
                     st.dataframe(df_results, hide_index=True)
                 else:
                     st.info("No stocks found matching your criteria. Try adjusting the filters.")
     
     elif page == "Portfolio Builder":
-        st.header("🛠️ AI Portfolio Builder")
+        st.header("🛠 AI Portfolio Builder")
         st.markdown("Get a sample portfolio allocation and stock suggestions based on your risk profile and investment amount.")
 
         risk_profile_choice = st.selectbox("Select your risk profile:", list(portfolio_builder_instance.risk_profiles.keys()), key="risk_profile_select")
@@ -825,7 +851,7 @@ def main():
             
             st.markdown("---")
             st.subheader("Example Stock Suggestions:")
-            st.markdown("_These are randomly sampled examples from each category. **Always do your own research (DYOR)** before investing._")
+            st.markdown("These are randomly sampled examples from each category. *Always do your own research (DYOR)* before investing.")
 
             sugg_cols = st.columns(3) 
             
@@ -837,9 +863,10 @@ def main():
 
             any_suggestions = False
             for cap_type, (stock_list, column) in cat_map.items():
-                if portfolio_allocation_amts[cap_type] > 0 and stock_list: 
+                if portfolio_allocation_amts[cap_type] > 0 and stock_list: # Check if allocation > 0 and list not empty
                     with column:
-                        st.markdown(f"**{cap_type} (₹{portfolio_allocation_amts[cap_type]:,.0f})**")
+                        st.markdown(f"{cap_type} (₹{portfolio_allocation_amts[cap_type]:,.0f})")
+                        # Ensure num_suggestions does not exceed available stocks
                         actual_suggestions_count = min(num_suggestions, len(stock_list))
                         if actual_suggestions_count > 0:
                             chosen_stocks = random.sample(stock_list, actual_suggestions_count)
@@ -848,16 +875,17 @@ def main():
                                     s_info = yf.Ticker(stock_sym).info
                                     s_name = s_info.get('shortName', stock_sym.replace(".NS",""))
                                     s_price = s_info.get('currentPrice', s_info.get('regularMarketPrice'))
-                                    price_display = f" (₹{s_price:.2f})" if isinstance(s_price, (int, float)) else ""
+                                    price_display = f" (₹{s_price:.2f})" if s_price else ""
                                     st.markdown(f"- {s_name}{price_display}")
                                     any_suggestions = True
                                 except:
                                     st.markdown(f"- {stock_sym.replace('.NS','')} (Info N/A)")
                         else:
-                             st.markdown(f"_(No stocks to suggest in {cap_type} list)_")       
+                             st.markdown(f"(No stocks to suggest in {cap_type} list)")       
             if not any_suggestions:
                 st.info("No stocks to suggest based on current lists or allocation.")
 
+    # Sidebar Footer with Disclaimer and Creator Info
     st.sidebar.markdown("---")
     st.sidebar.info("Disclaimer: StockSense AI is for educational and informational purposes only. It does not constitute financial advice. Always consult a qualified financial advisor.")
     st.sidebar.markdown("---")
@@ -876,7 +904,5 @@ def main():
     )
 
 
-if __name__ == "__main__":
-    while True:
-        main()
-        time.sleep(1) 
+if _name_ == "_main_":
+    main()
