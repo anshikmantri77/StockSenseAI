@@ -609,7 +609,7 @@ def main():
                 recommendation, css_class = analyzer.get_recommendation(score)
                 
                 st.subheader(f"📊 Analysis for {info.get('longName', selected_stock)}")
-                st.info(f"**Live Data** - Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S IST')}")
+                st.info(f"**Live Data** - Last Updated: {datetime.now(kolkata_tz).strftime('%Y-%m-%d %H:%M:%S %Z')}")
 
                 current_price = info.get('currentPrice', info.get('regularMarketPrice', 'N/A'))
                 daily_change = info.get('dailyChange', 0.0) 
