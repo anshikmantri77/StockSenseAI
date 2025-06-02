@@ -769,7 +769,7 @@ def main():
         if "Mid Cap" in stock_categories_to_scan: stocks_to_scan_list.extend(analyzer.mid_cap_stocks)
         if "Small Cap" in stock_categories_to_scan: stocks_to_scan_list.extend(analyzer.small_cap_stocks)
         
-        max_scan_limit = 100 # Limit the number of stocks to scan for performance reasons
+        max_scan_limit = 75 # Limit the number of stocks to scan for performance reasons
         if len(stocks_to_scan_list) > max_scan_limit:
             st.warning(f"Scanning is limited to {max_scan_limit} random stocks from your selection for performance.")
             stocks_to_scan_list = random.sample(stocks_to_scan_list, max_scan_limit)
