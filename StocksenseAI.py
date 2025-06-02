@@ -587,7 +587,7 @@ def main():
         with col1_select:
             selected_stock = st.selectbox("Select a stock:", analyzer.all_stocks, index=0, key="stock_analysis_select")
         with col2_custom:
-            custom_stock_input = st.text_input("Or enter custom symbol :", key="stock_analysis_custom")
+            custom_stock_input = st.text_input("Or enter custom symbol(e.g., TCS.NS or INFS.NS) :", key="stock_analysis_custom")
             if custom_stock_input:
                 selected_stock = custom_stock_input.upper()
                 # If a custom symbol is entered, override the selectbox
