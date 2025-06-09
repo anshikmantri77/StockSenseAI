@@ -535,27 +535,94 @@ class StockAnalyzer:
         return gainers, losers
 
 class PortfolioBuilder:
+    """
+    Manages portfolio allocation based on risk profiles and calculates projected investment values.
+    """
     def __init__(self):
+        # Define different risk profiles with their asset allocation percentages.
+        # Asset classes include Large Cap, Mid Cap, Small Cap stocks, Debt, Gold, and International Stocks.
         self.risk_profiles = {
-            'Conservative': {'large_cap': 70, 'mid_cap': 20, 'small_cap': 10},
-            'Moderate': {'large_cap': 50, 'mid_cap': 30, 'small_cap': 20},
-            'Aggressive': {'large_cap': 30, 'mid_cap': 40, 'small_cap': 30}
+            "Conservative": {"Large Cap": 0.50, "Debt": 0.30, "Gold": 0.10, "International Stocks": 0.10},
+            "Moderate": {"Large Cap": 0.40, "Mid Cap": 0.20, "Debt": 0.20, "Gold": 0.10, "International Stocks": 0.10},
+            "Aggressive": {"Large Cap": 0.30, "Mid Cap": 0.30, "Small Cap": 0.20, "International Stocks": 0.20}
         }
-    
-    def get_portfolio_allocation(self, risk_profile, investment_amount):
-        allocation_pct = self.risk_profiles[risk_profile]
-        return {
-            'Large Cap': (allocation_pct['large_cap'] / 100) * investment_amount,
-            'Mid Cap': (allocation_pct['mid_cap'] / 100) * investment_amount,
-            'Small Cap': (allocation_pct['small_cap'] / 100) * investment_amount
+        
+        # Simplified, illustrative average annual returns for different asset classes.
+        # These are hypothetical and used for projection purposes only.
+        self.average_annual_returns = {
+            "Large Cap": 0.13,  # 13% average annual return
+            "Mid Cap": 0.16,    # 16% average annual return
+            "Small Cap": 0.19,  # 19% average annual return
+            "Gold": 0.09,       # 9% average annual return
+            "Debt": 0.07,       # 7% average annual return
+            "International Stocks": 0.12 # 12% average annual return
         }
 
-    def create_allocation_pie_chart(self, allocation_values):
-        labels = list(allocation_values.keys())
-        values = list(allocation_values.values())
-        fig = px.pie(values=values, names=labels, title="Portfolio Allocation (Amount)", hole=0.3)
-        fig.update_traces(textposition='inside', textinfo='percent+label+value')
+    def get_portfolio_allocation(self, risk_profile: str, investment_amount: float) -> dict:
+        """
+        Calculates the investment amount for each asset class based on risk profile.
+
+        Args:
+            risk_profile (str): The selected risk profile (e.g., "Conservative", "Moderate").
+            investment_amount (float): The total amount the user plans to invest.
+
+        Returns:
+            dict: A dictionary mapping asset class to its allocated investment amount.
+        """
+        allocation_percentage = self.risk_profiles.get(risk_profile, self.risk_profiles["Moderate"])
+        allocation_amounts = {asset: investment_amount * perc for asset, perc in allocation_percentage.items()}
+        return allocation_amounts
+
+    def create_allocation_pie_chart(self, allocation_amounts: dict) -> go.Figure:
+        """
+        Generates a pie chart visualizing the asset allocation.
+
+        Args:
+            allocation_amounts (dict): Dictionary of asset classes and their allocated amounts.
+
+        Returns:
+            go.Figure: A Plotly pie chart figure.
+        """
+        labels = list(allocation_amounts.keys())
+        values = list(allocation_amounts.values())
+        fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3)])
+        fig.update_layout(margin=dict(l=20, r=20, t=20, b=20), showlegend=True)
         return fig
+
+    def calculate_projected_value(self, investment_type: str, duration_years: int, allocation_amounts: dict) -> float:
+        """
+        Calculates the estimated future value of the investment based on type and duration.
+
+        Args:
+            investment_type (str): "One-time" or "SIP".
+            duration_years (int): The investment duration in years.
+            allocation_amounts (dict): Dictionary of asset classes and their allocated amounts.
+
+        Returns:
+            float: The total estimated future value of the investment.
+        """
+        total_projected_value = 0.0
+        
+        for asset_type, allocated_amount in allocation_amounts.items():
+            annual_return = self.average_annual_returns.get(asset_type, 0.0) # Default to 0% if asset not found
+
+            if investment_type == "One-time":
+                # For a one-time investment, use simple compound interest: PV * (1 + r)^n
+                projected_amount = allocated_amount * ((1 + annual_return) ** duration_years)
+            elif investment_type == "SIP":
+                # Simplified SIP approximation: This assumes the 'allocated_amount' represents 
+                # the total capital that would be invested gradually over 'duration_years'.
+                # We use an average investment period (duration_years / 2) for this approximation.
+                # A more precise SIP calculation (future value of an annuity) would require 
+                # knowing the periodic investment amount, which is not an input here.
+                if duration_years > 0:
+                    projected_amount = allocated_amount * ((1 + annual_return) ** (duration_years / 2.0))
+                else: # If duration is 0, no growth, just the initial amount
+                    projected_amount = allocated_amount
+
+            total_projected_value += projected_amount
+            
+        return total_projected_value
 
 def get_sentiment_analysis(text):
     """Performs sentiment analysis using TextBlob."""
@@ -839,11 +906,40 @@ def main():
         st.header("🛠️ AI Portfolio Builder")
         st.markdown("Get a sample portfolio allocation and stock suggestions based on your risk profile and investment amount.")
 
-        risk_profile_choice = st.selectbox("Select your risk profile:", list(portfolio_builder_instance.risk_profiles.keys()), key="risk_profile_select")
-        investment_amt = st.number_input("Enter total investment amount (INR):", min_value=10000.0, value=100000.0, step=1000.0, format="%.2f")
-        num_suggestions = st.slider("Number of stock suggestions per category:", 1, 5, 3, key="num_stock_suggestions")
+        risk_profile_choice = st.selectbox(
+            "Select your risk profile:", 
+            list(portfolio_builder_instance.risk_profiles.keys()), 
+            key="risk_profile_select"
+        )
+        investment_amt = st.number_input(
+            "Enter total investment amount (INR):", 
+            min_value=10000.0, 
+            value=100000.0, 
+            step=1000.0, 
+            format="%.2f"
+        )
+        num_suggestions = st.slider(
+            "Number of stock suggestions per category:", 
+            1, 5, 3, 
+            key="num_stock_suggestions"
+        )
 
-        if st.button("Generate Portfolio Suggestion", type="primary", key="generate_portfolio_button"):
+        # --- NEW INPUTS FOR PROJECTION ---
+        st.markdown("---")
+        st.subheader("Investment Details for Projection")
+        investment_type = st.radio(
+            "Type of Investment:", 
+            ["One-time", "SIP"], 
+            key="investment_type_radio"
+        )
+        duration_years = st.selectbox(
+            "Investment Duration (Years):", 
+            [1, 2, 3, 4, 5, 10, 15, 20], 
+            key="duration_select"
+        )
+        # --- END NEW INPUTS ---
+
+        if st.button("Generate Portfolio Suggestion & Projection", type="primary", key="generate_portfolio_button"):
             portfolio_allocation_amts = portfolio_builder_instance.get_portfolio_allocation(risk_profile_choice, investment_amt)
             
             st.subheader("Suggested Asset Allocation (Amount):")
@@ -863,7 +959,7 @@ def main():
 
             any_suggestions = False
             for cap_type, (stock_list, column) in cat_map.items():
-                if portfolio_allocation_amts[cap_type] > 0 and stock_list: # Check if allocation > 0 and list not empty
+                if portfolio_allocation_amts.get(cap_type, 0) > 0 and stock_list: # Check if allocation > 0 and list not empty
                     with column:
                         st.markdown(f"**{cap_type} (₹{portfolio_allocation_amts[cap_type]:,.0f})**")
                         # Ensure num_suggestions does not exceed available stocks
@@ -875,15 +971,41 @@ def main():
                                     s_info = yf.Ticker(stock_sym).info
                                     s_name = s_info.get('shortName', stock_sym.replace(".NS",""))
                                     s_price = s_info.get('currentPrice', s_info.get('regularMarketPrice'))
-                                    price_display = f" (₹{s_price:.2f})" if s_price else ""
+                                    price_display = f" (₹{s_price:,.2f})" if s_price else ""
                                     st.markdown(f"- {s_name}{price_display}")
                                     any_suggestions = True
-                                except:
-                                    st.markdown(f"- {stock_sym.replace('.NS','')} (Info N/A)")
+                                except Exception as e:
+                                    st.markdown(f"- {stock_sym.replace('.NS','')}: Info N/A (Error fetching data)")
                         else:
                              st.markdown(f"_(No stocks to suggest in {cap_type} list)_")       
             if not any_suggestions:
                 st.info("No stocks to suggest based on current lists or allocation.")
+
+            # --- NEW PROJECTION DISPLAY SECTION ---
+            st.markdown("---")
+            st.subheader(f"Projected Value after {duration_years} Years ({investment_type} Investment):")
+            
+            # Calculate the estimated future value
+            projected_value = portfolio_builder_instance.calculate_projected_value(
+                investment_type, duration_years, portfolio_allocation_amts
+            )
+            
+            st.success(f"**Estimated Future Value: ₹{projected_value:,.2f}**")
+            
+            # Disclaimer for the projection
+            st.markdown(f"""
+                _**Disclaimer:** This projection is illustrative and based on simplified average annual returns (_
+                _Large Cap: {portfolio_builder_instance.average_annual_returns['Large Cap']*100:.1f}%,
+                Mid Cap: {portfolio_builder_instance.average_annual_returns['Mid Cap']*100:.1f}%,
+                Small Cap: {portfolio_builder_instance.average_annual_returns['Small Cap']*100:.1f}%,
+                Gold: {portfolio_builder_instance.average_annual_returns['Gold']*100:.1f}%,
+                Debt: {portfolio_builder_instance.average_annual_returns['Debt']*100:.1f}%,
+                International Stocks: {portfolio_builder_instance.average_annual_returns['International Stocks']*100:.1f}%_
+                _) and does not account for market volatility, inflation, taxes, fees, or actual historical performance of specific investments.
+                For **SIP**, the calculation assumes the 'total investment amount' is invested gradually, and the projection uses an average investment period exposure over the duration.
+                **Past performance is not indicative of future results. Always consult a qualified financial advisor before making investment decisions.**_
+            """)
+            # --- END NEW PROJECTION DISPLAY ---
 
     # Sidebar Footer with Disclaimer and Creator Info
     st.sidebar.markdown("---")
@@ -892,7 +1014,7 @@ def main():
     st.sidebar.markdown(
         """
         <div class="sidebar-footer">
-            <p><b>Made by:</b> ANSHIKa MANTRI</p>
+            <p><b>Made by:</b> ANSHIK MANTRI</p>
             <p><b>Email:</b> <a href="mailto:anshikmantri26@gmail.com">anshikmantri26@gmail.com</a></p>
             <p>
                 <a href="http://www.linkedin.com/in/anshikmantri" target="_blank">LinkedIn</a> | 
@@ -906,4 +1028,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
