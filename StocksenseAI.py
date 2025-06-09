@@ -892,7 +892,7 @@ def main():
     st.sidebar.markdown(
         """
         <div class="sidebar-footer">
-            <p><b>Made by:</b> ANSHIK MANTRI</p>
+            <p><b>Made by:</b> ANSHIKa MANTRI</p>
             <p><b>Email:</b> <a href="mailto:anshikmantri26@gmail.com">anshikmantri26@gmail.com</a></p>
             <p>
                 <a href="http://www.linkedin.com/in/anshikmantri" target="_blank">LinkedIn</a> | 
